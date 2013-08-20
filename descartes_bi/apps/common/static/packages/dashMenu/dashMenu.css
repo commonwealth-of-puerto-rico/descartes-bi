@@ -1,0 +1,22 @@
+/* CSS Document */
+
+.dashMenuList li, .dmItem a{height:88px; width:198px;}
+.dashMenuList li { 
+	background:#241c22 no-repeat center 10px; 
+	float:left; 
+	margin:5px;
+	color:#e6e6e6; 
+	height:88px; 
+	width:198px;
+	list-style-type:none;
+	text-align:center;
+	-webkit-border-radius: 10;  
+	-moz-border-radius: 10px;  
+	-o-border-radius: 10px;  
+	border-radius: 10px;  
+	line-height:130px;
+	position:relative;
+}
+
+.dmItem a{position:absolute;   top:0; left:0}
+

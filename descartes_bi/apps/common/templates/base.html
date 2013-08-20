@@ -1,0 +1,388 @@
+{% load i18n %}
+{% load static %}
+{% load menubuilder %}
+{% load project_tags %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        {% block keywords %}{% endblock %}
+        <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}" />
+
+        <link type="text/css" href="{% static 'css/layout.css' %}" rel="stylesheet" media="screen"/>
+        <link type="text/css" href="{% static 'css/theme_screen.css' %}" rel="stylesheet" media="screen" />
+        <link type="text/css" href="{% static 'css/theme_print.css' %}" rel="stylesheet" media="print" />
+        <link type="text/css" rel="stylesheet" href="{% static 'packages/jquery-ui-1.10.3/themes/smoothness/jquery-ui-1.10.3.custom.css' %}" />
+        <link type="text/css" rel="stylesheet" href="{% static 'packages/superfish-1.7.2/css/superfish.css' %}" media="screen" />
+        <link type="text/css" rel="stylesheet" href="{% static 'packages/Sliding_login_panel_jquery/css/slide.css' %}" media="screen" />
+        <link type="text/css" rel="stylesheet" href="{% static 'packages/jGrowl-1.2.0/jquery.jgrowl.css' %}" media="screen" />
+        <link type="text/css" href="{% static 'css/artemisMod.css' %}" rel="stylesheet" media="screen"/>
+        <link type="text/css" rel="stylesheet" href="{% static 'packages/dashMenu/dashMenu.css' %}" media="screen"/>
+
+        {% block stylesheets %}{% endblock %}
+        {# Add CSS Debugging #}
+        {% if 0 %}
+            <style type="text/css">
+               *:hover { border:2px solid #ffffff }
+               * *:hover { border:2px solid #89A81E }
+               * * *:hover { border:2px solid #F34607 }
+               * * * *:hover { border:2px solid #5984C3 }
+               * * * * *:hover { border:2px solid #CD1821 }
+               * * * * * *:hover { border:2px dotted #89A81E }
+               * * * * * * *:hover { border:2px dotted #F34607 }
+               * * * * * * * *:hover { border:2px dotted #5984C3 }
+               * * * * * * * * *:hover { border:2px dotted #CD1821 }
+            </style>
+        {% endif %}
+        <script type="text/javascript" src="{% static 'packages/jquery-1.9.1.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/jquery-migrate-1.2.1.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/jquery-ui-1.10.3/ui/jquery-ui.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/jquery-corners/jquery.corners.min2.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/superfish-1.7.2/js/hoverIntent.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/superfish-1.7.2/js/superfish.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/superfish-1.7.2/js/supersubs.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/Sliding_login_panel_jquery/js/slide-min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/jGrowl-1.2.0/jquery.jgrowl_minimized.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/dashMenu/dashMenu.js' %}"></script>
+        <script type="text/javascript">
+
+            var global_report_loading = false;
+
+            jQuery.fn.log = function (msg) {
+                console.log("%s: %o", msg, this);
+                return this;
+            };
+            $.ajaxSetup({
+                cache: true
+            });
+
+            function load_and_bind(wrapper, form_name, url) {
+                $(wrapper).load(url, function() {
+                    $(form_name).submit(function() {
+                        return ajax_process(form_name);
+                    });
+                });
+            }
+
+            function ajax_process(form_name) {
+                var form = $(form_name);
+                var str = form.serialize();
+                var path = form.attr('action');
+                var wrapper = $('#_wrapper', form).val();
+                var next_url = $('#_next_url', form).val();
+                var reload = $('#_reload_window', form).val();
+                $.ajax({
+                    type: "POST",
+                    url: path,
+                    data: str,
+                    success: function(data){
+                        $(wrapper).empty();
+                        $(wrapper).html(data);
+                        //workaround, rebind until .live supports "submit"
+                        $(form_name).bind('submit', function() {
+                            return ajax_process(form_name);
+                        });
+                        var validation_error = $(data).find('.errorlist').html();
+                        if (validation_error == null) {
+                            $('button:submit', this.parent).attr("disabled", "disabled");
+                            $.ajax({
+                                type: "POST",
+                                url: path,
+                                data: str,
+                                beforeSend: function(){
+                                },
+                                dataType: "html",
+                                error: function(data) {
+                                    $('button:submit', this.parent).removeAttr('disabled');
+                                },
+                                success: function(data){
+                                    $('button:submit', this.parent).removeAttr('disabled');
+                                    //$("div#panel").slideUp("fast");
+                                    //$("#toggle a").toggle();
+                                    $(wrapper).load(next_url);
+                                    if (reload == '1') {
+                                        location.reload();
+                                    }
+                                    $(form_name).bind('submit', function() {
+                                        return ajax_process(form_name);
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+                return false;
+            };
+
+            $(document).ready(function() {
+                $().ajaxSend(function(r,s){
+                    global_report_loading = true;
+                    $("#loading").show();
+                });
+
+                $().ajaxStop(function(r,s){
+                    global_report_loading = false;
+                    $("#loading").fadeOut("fast");
+                });
+
+                $('.rounded').corners();
+
+                $('ul.sf-menu').supersubs({
+                    minWidth: 12,
+                    maxWidth: 39,
+                    extraWidth: 1
+                }).superfish({
+                    animation: {opacity:'show',height:'show'},
+                    delay: 140,
+                    speed: 100
+                });
+                $('.ajax-button').click(function() {
+                    $(this).parent().parent().hide();
+                    if (global_report_loading) {
+                        //TODO: use new growl app
+                        $('#jgrowl-container').jGrowl("{% trans 'The selected report is being processed, please wait.' %}");
+                        return false;
+                    }
+                    $("#parameters_wrapper").empty();
+                    $("#info-panel").hide();
+                    $("#chart_wrapper").load($(this).attr('href'));
+                    return false;
+                });
+
+                $('.report-button').click(function() {
+                    var report_num = $(this).attr('href');
+                    $(this).parent().parent().hide();
+                    if (global_report_loading) {
+                        $('#jgrowl-container').jGrowl("{% trans 'The selected report is being processed, please wait.' %}");
+                        return false;
+                    }
+                    $("#chart_wrapper").empty();
+
+                    $("#tab-wrapper").html('<div id="info-panel" style="display: none; font-size: 90%;"><ul></ul></div>');
+                    $("#info-panel").tabs();
+                    $("#info-panel").show();
+                    $("<li><a href='/reports/ajax/report_description/" + report_num + "/'>{% trans 'Description' %}</a></li>").appendTo("#info-panel .ui-tabs-nav");
+                    $("<li><a href='/reports/ajax/report_validation/" + report_num + "/'>{% trans 'Validation' %}</a></li>").appendTo("#info-panel .ui-tabs-nav");
+                    {% if user.is_staff %}
+                        $("<li><a href='/reports/ajax/report/" + report_num + "/benchmarks/'>{% trans 'Benchmarks' %}</a></li>").appendTo("#info-panel .ui-tabs-nav");
+                    {% endif %}
+                    $("#info-panel").tabs("refresh");
+                    $("#info-panel").tabs("option", "active", 0);
+
+                    $("#parameters_wrapper").load("/reports/ajax/filter_form/" + report_num + '/', function() {
+                        $('.rounded').corners();
+                        $("#submit-text").text("{% trans 'Generate results' %}");
+                    });
+                    $("#current_report").val(report_num);
+                    return false;
+                });
+
+                {% if user.is_anonymous %}
+                    load_and_bind("#login_form_wrapper", ".login_panel_form", "{% url 'my_login' %}?next={% url 'my_login' %}");
+                {% else %}
+                    load_and_bind("#login_form_wrapper", ".login_panel_form", "{% url 'my_password_change' %}");
+                {% endif %}
+            });
+        </script>
+        {% block javascript %}{% endblock %}
+        <title>{% project_name %}{% block title %}{% endblock %}</title>
+
+    </head>
+    <body>
+        <form><input id="current_report" type="hidden" value="" /></form>
+    <div id="jgrowl-container" class="top-right" style="top: 50px;"></div>
+    <!-- Login -->
+    <div id="toppanel">
+        <div id="panel">
+
+            <div class="content clearfix">
+                {% if not user.is_anonymous %}
+                    <div class="left right">
+                        <h1>{% trans "Logout from aplication?" %}</h1>
+                        <form action="{% url 'user_logout' %}" method="post">
+                            <input type="submit" name="submit" value="{% trans 'Logout' %}" class="bt_register" />
+                        </form>
+                    </div>
+                {% endif %}
+
+                {% if user.is_anonymous or user.has_usable_password %}
+                    <div class="left right">
+                        <div id="login_form_wrapper"></div>
+                    </div>
+                {% endif %}
+
+                {% if not user.is_anonymous %}
+                    <div class="left right">
+                        <h1>{% trans "User information" %}</h1>
+                        <h2>{% trans "User fullname" %}:</h2> {{ user.get_full_name }}
+                        <h2>{% trans "Last login" %}:</h2> {{ user.last_login }}
+                    </div>
+                {% endif %}
+
+                {% if user.is_anonymous %}
+                    <div class="left right">
+                        <h1>{% trans "Welcome" %}&nbsp;{% project_name %}</h1>
+                        <h2>{% trans "Authorized access is required" %}</h2>
+                        <p class="grey">{% trans "If you don't have an account, contact your system administrator so that one may be created for you." %}</p>
+                    </div>
+                {% endif %}
+
+                    <div class="left right">
+                        <br />
+                        <h1>{% trans "Language" %}</h1>
+                        <h2>
+                    {% ifequal LANGUAGE_CODE "es" %}
+                        <a href="{% url 'set_language' %}?language=en"><img src="{% static 'images/flag-us.png' %}" alt="US-flag" /> {% trans "English" %}</a>
+                        &nbsp;/&nbsp;<img src="{% static 'images/flag-pr.png' %}" alt="PR-flag" /> {% trans "Spanish" %}
+                    {% else %}
+                        <a href="{% url 'set_language' %}?language=es"><img src="{% static 'images/flag-pr.png' %}" alt="PR-flag" /> {% trans "Spanish" %}</a>
+                        &nbsp;/&nbsp;<img src="{% static 'images/flag-us.png' %}" alt="US-flag" /> {% trans "English" %}
+                    {% endifequal %}
+                    </h2>
+
+                    </div>
+            </div>
+        </div>
+        <!-- /login -->
+
+        <!-- The tab on top -->
+
+        <div class="tab">
+            <ul class="login">
+                <li class="left">&nbsp;</li>
+                <li id="username_box">
+                {% trans 'User' %}:
+                {% if user.is_anonymous %}
+                    <span style="font-size:120%;">{% trans "Anonymous" %}</span>
+                    <input type="hidden" id="auth_user" value="" />
+                {% else %}
+                    <span style="font-size:120%;">{{ user }}</span>
+                    <input type="hidden" id="auth_user" value="{{ user }}" />
+                {% endif %}
+                </li>
+
+                <li class="sep">|</li>
+                <li id="toggle">
+                    <a id="open" class="open" href="#">{% trans "Open panel" %}</a>
+                    <a id="close" style="display: none;" class="close" href="#">{% trans "Close panel" %}</a>
+                </li>
+                <li class="right">&nbsp;</li>
+            </ul>
+        </div> <!-- / top -->
+    </div> <!--panel -->
+        <div id="loading">
+            {% trans "Loading" %}...<img src="{% static 'images/loading.gif' %}" alt="" width="16" height="16" />
+        </div>
+
+        <div id="header"  >
+            <!--{% project_name %}-->
+                <div style="float:left;">
+                    <h1 style="text-align: center; font-size: 35px; margin-top: 0px; margin-bottom: 0px;" >
+                        <a href="/" style="color: white;"><img src="{% static 'images/logo2013.png' %}" alt="project logo" /></a>
+                    </h1>
+                </div>
+        </div> <!-- hd -->
+
+        <div class="navigation">
+            <ul class="sf-menu" style="z-index:1;position: relative; margin: 0px; font-size: 95%;">
+                <li><a href="#">{% trans "Home" %}</a>
+                    <ul>
+                        <li><a href="/">{% trans "Main page" %}</a></li>
+                        <li><a href="{% url 'about_view' %}">{% trans "About" %}</a></li>
+                    </ul>
+                </li>
+
+                {% block menu %}
+                {% endblock %}
+
+                <!-- Original Menu
+                {% get_menu %}
+                {% for menu_entry in menuitems_allowed %}
+                <li>
+                    <a href="#">{{ menu_entry }}</a>
+                    <ul>
+                        {% for report in menu_entry.reports.all %}
+                            {% if report|in_list:reports_allowed %}
+                                <li><a class="report-button" href="{{ report.id }}">{{ report }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endfor %} -->
+
+                {% if user.is_staff %}
+                    <li><a href="#">{% trans "Configuration" %}</a>
+                        <ul>
+                            <li><a href="/admin/">{% trans "Administration" %}</a></li>
+                        </ul>
+                    </li>
+                {% endif %}
+                {% get_custom_apps %}
+                {% for app,app_data in custom_apps_data.items %}
+                    {% if app_data.menu_items or app_data.template_data %}
+                        <li><a href="#">{{ app_data.menu_title }}</a>
+                            {% if app_data.menu_items %}
+                            <ul>
+                                {% for entry in app_data.menu_items %}
+                                    <li><a href="{{ entry }}">{{ entry }}</a></li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% if app_data.template_data %}
+                                {{ app_data.template_data|safe }}
+                            {% endif %}
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="colmask leftmenu" style="z-index:0; position:relative; ">
+        {% block dashboard %} {% endblock %}
+            <div class="colleft" >
+                <div class="col1" style="background: white; color: black;">
+                    <!-- Column 1 start -->
+                    <script type="text/javascript">
+                    </script>
+
+                    <noscript>
+                        <div id="js_noscript">
+                            <img src="{% static 'images/dialog-warning.png' %}" alt="" />
+                            {% trans "This software uses a technology known as Javascript, make sure that your browser supports it, and that it is properly enabled." %}
+                        </div>
+                    </noscript>
+
+                    {% if messages %}
+                        <ul id="flashmessages">
+                            {% for message in messages %}
+                                <li id="flashmessage"><a href="#" onclick="$(this).parent().fadeOut(); return false;">{% trans "Ok" %}</a>
+                                    <img src="{% static 'images/internet-group-chat.png' %}" alt="message"/>&nbsp;&quot;{{ message }}&quot;
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <div id="please-wait">
+                    </div>
+
+                    <div id="chart_wrapper" >
+                        {% block content %} {% endblock %}
+                        {% block dash_menu %} {% endblock %}
+                    </div>
+
+                </div>
+                <div class="col2" style="height: 100%;">
+                    <div id="parameters_wrapper">{% block column2 %} {% endblock %}</div>
+                    <div id="tab-wrapper"></div>
+                <!-- Column 2 end -->
+            </div>
+        </div>
+        </div>
+        <div class="footer">
+            <h2><strong>{% trans 'A Web based business intelligence software' %}</strong></h2>
+            {% trans 'Copyright (C) 2010  Roberto Rosario' %}
+        </div>
+    </body>
+</html>

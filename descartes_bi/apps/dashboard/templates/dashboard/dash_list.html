@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+<style>
+    .mapdiv {
+        width:48%;
+        height:100%;
+        float:left;
+        margin-left:1%;
+        margin-right:1%;
+        margin-bottom:4.5%;
+        color:#666;
+        float:left;
+
+    }
+    .map {
+        width:95%;
+        height:100%;
+        border:0;
+        margin-top:1%;
+        margin-left:3%;
+        margin-right:3%;
+        height:70%;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard %}
+<script type="text/javascript">
+     $(document).ready(function() {
+        $(".colmask").empty();
+        $(".colmask").css("overflow-y", "scroll" );
+        $(".colmask").append('<div id="dashboard" style="margin:10px; width:100%;"></div>');
+        // {% for sp in selected_reports %}
+        //     {% if not sp.website.id %}
+        //         console.log("I'm a report")
+
+        //     $('#dashboard').append('<div id ="{{ sp.id }}" style="width:48%; height:100%; float:left;" ></div>');
+
+        //     function rep{{ sp.id }}(){
+        //         var param= [{% for filter in sp.filtersets.filters.all %} "{{ filter.name }}", {% endfor %} ];
+        //         var val = "{{sp.values}}".replace(/\s/g, '');
+        //         var values = val.split(",");
+        //         if ( param.length == values.length) {
+        //             var link = "{% url 'home_view' %}reports/ajax/report/{{ sp.rep_id.id }}/?";
+        //             for (var i=0; i < param.length; i++){
+        //                 link = link + param[i] + "=" + values[i] + "&";
+        //             }
+        //             link = link + "output_type={{ sp.visual_type }}";
+        //             $('#{{ sp.id }}').load(link);
+        //             console.log(link)
+        //         }
+        //         else {
+        //             $('#{{ sp.id }}').append("Parameters don't match");
+        //         }
+        //     }
+        //             rep{{ sp.id }}();
+        //             setInterval( rep{{ sp.id }} , {{ sp.refresh_rate }} * 1000 );
+
+        //     {% else %}
+        //         console.log("I'm a website")
+        //         var url = "{{ sp.website.series.data_source.load_backend.cursor.url }}"
+        //         var query = "{{ sp.website.series.query}}"
+        //         var link = url + "?" + query
+        //         // $('#{{ sp.id }}').load(link)
+        //         console.log(link)
+        //         $('#dashboard').append('<div class="mapdiv"><h1>{{ sp.website.label }}</h1><iframe id="{{ sp.id }}" src="'+link+'" class="map" ></iframe></div>');
+
+        //         // rep{{ sp.id }}();
+        //         // setInterval( rep{{ sp.id }} , {{ sp.refresh_rate }} * 1000 );
+        //     {% endif %}
+
+        // {% endfor %}
+
+        {% for key,value in links.items %}
+            {% if "mapdiv" in key %}
+                $("#dashboard").append('<div class="mapdiv"><h1 id="{{key}}">Map</h1><iframe src="{{value}}" class="map" ></iframe></div>');
+            {% else %}
+                $("#dashboard").append('<div id="test{{key}}" style="width:48%; height:100%; float:left;"><div>');
+            function rep{{ key }}(){
+                $("#test{{key}}").load("{% url 'home_view' %}{{ value }}");}
+            {% endif %}
+            
+        {% endfor %}
+
+        {% for sp in selected_reports %}
+            {% if not sp.website.id %}
+                rep{{ sp.id }}();
+                setInterval( rep{{ sp.id }} , {{ sp.refresh_rate }} * 1000 );
+            {% else %}
+                $("#mapdiv{{sp.id}}").text("{{ sp.website.label }}");
+            {% endif %}
+        {% endfor %}
+
+
+        window.onresize = function(){
+            //var zoom = d3.behavior.zoom();
+            //svg.call(zoom.on("zoom", redraw));
+        };
+
+     });
+</script>
+{% endblock %}
+
