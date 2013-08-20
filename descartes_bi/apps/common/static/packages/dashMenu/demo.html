@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+ <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script src="dashMenu.js"></script>
+
+<link href="dashMenu.css" rel="stylesheet" type="text/css" />
+
+<script>
+	// Fill This Array whit the Menu Content using {title: "Title", icon:"Menu Item Icon", hyperlink: "Target URL"}
+	var itemList = [
+		//Examples
+		{title:"Servicios al Cuidadano", icon:"img/servciu.png", hyperlink:"www.youtube.com"},
+		{title:"Ambiente", icon:"img/ambiente.png",  hyperlink:"www.youtube.com"}
+	]
+	
+	$(document).ready(function(e) {
+		//Fill the dashMenu passing Array and Parent element id or class
+		fillDashMenu(itemList, ".gobDashMenu");
+	});
+</script>
+
+</head>
+
+<body>
+
+    <div class="gobDashMenu"></div>
+
+</body>
+</html>

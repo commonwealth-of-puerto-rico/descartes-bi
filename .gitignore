@@ -5,3 +5,7 @@ settings_local.py
 *.swp
 *.sqlite
 /venv/
+/descartesEnv/
+.DS_Store
+.project
+.py~

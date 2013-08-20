@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block javascript %}
+<script type="text/javascript">
+	$(document).ready(function(){
+    		var form = '{{ filter_form | escapejs }}';
+    		$('#params').append(form);
+	});
+</script>
+{% endblock %}
+
+{% block content %}
+    <iframe src="{{ url }}" height=100% width=100%></iframe>
+{% endblock content %}
+
+{% block column2 %}
+<h1 style="color: #555;">{{ label }}</h1>
+    {% if website %}
+        <style>
+            .data-entry table { width: 100%; }
+            .data-entry table tbody td { width: 100%; }
+        </style>
+
+        <div class="ui-widget ui-widget-content ui-corner-all">
+
+            <form method="get" action="" id="parameters_form">
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <td colspan="2" class="ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
+                                {% trans "Parameters" %}
+                            </td>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2">
+                                <button type="submit" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover ui-state-active ui-priority-primary" role="button" aria-disabled="false"><span class="ui-button-text" id="submit-text">{% trans 'Submit' %}</span></button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                    <tbody id="params">
+                        <style>
+                            #date_helpers {
+                                width: 100%;
+                                text-align: center;
+                            }
+                            #date_helpers ul {
+                                margin: 1;
+                                padding: 0;
+                            }
+                            #date_helpers li {
+                                display: inline;
+                                margin: 0;
+                                padding: 0;
+                            }
+                        </style>
+                        <tr>
+                            <td colspan="2">
+                                <div id="date_helpers"><hr /></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}
