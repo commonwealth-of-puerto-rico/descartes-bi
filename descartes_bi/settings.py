@@ -14,7 +14,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'shared_apps'))
 sys.path.append(os.path.join(PROJECT_ROOT, '3rd_party_apps'))
 
 PROJECT_NAME = 'descartes'
-PROJECT_TITLE = 'Descartes'
+PROJECT_TITLE = 'Descartes BI'
 
 DEBUG = False
 DEVELOPMENT = False
@@ -96,6 +96,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     # other finders..
+    'compressor.finders.CompressorFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -139,15 +140,20 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 3rd party
+    'compressor',
+    'mptt',
     'south',
+    # Descates BI
     'common',
+    'web_theme',
+    'namespaces',
     'main',
     'db_drivers',
+    'charts',
     'reports',
-    'mptt',
-    'dashboard',
+    'dashboards',
     'libre_driver',
-    'website',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -164,8 +170,11 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 GRAPPELLI_ADMIN_TITLE = PROJECT_TITLE
 #--------- Django -------------------
 LOGIN_URL = reverse_lazy('login_view')
-LOGIN_REDIRECT_URL = reverse_lazy('home')
-#------------------------------------
+LOGIN_REDIRECT_URL = reverse_lazy('home_view')
+#---------- CSS compress ------------
+COMPRESS_PARSER = 'compressor.parser.HtmlParser'
+COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter', 'compressor.filters.cssmin.CSSMinFilter']
+COMPRESS_ENABLED = False
 
 try:
     from settings_local import *

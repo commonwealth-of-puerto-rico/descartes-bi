@@ -1,8 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
-FILTER_TYPE_DATE = 'DA'
-FILTER_TYPE_COMBO = 'DR'
-FILTER_TYPE_MONTH = 'MO'
+FILTER_TYPE_COMBO = 1
+FILTER_TYPE_DATE = 2
 
 FILTER_FIELD_CHOICES = (
     (FILTER_TYPE_DATE, _('Date field')),
@@ -25,28 +24,6 @@ SERIES_TYPE_CHOICES = (
     ('To', _('Total')),
     ('C', _('Currency')),
 
-)
-
-CHART_TYPE_CHOICES = (
-    ('SI', _('Standard X,Y')),
-    ('PI', _('Pie chart')),
-    ('LB', _('Line Plus Bar Chart')),
-    ('LI', _('Line chart')),
-    ('LF', _('Line chart with Focus')),
-)
-LEGEND_LOCATION_CHOICES = (
-    ('nw', _('North-West')),
-    ('n', _('North')),
-    ('ne', _('North-East')),
-    ('e', _('East')),
-    ('se', _('South-East')),
-    ('s', _('South')),
-    ('sw', _('South-West')),
-    ('w', _('West')),
-)
-ORIENTATION_CHOICES = (
-    ('h', _('Horizontal')),
-    ('v', _('Vertical')),
 )
 
 UNION_CHOICES = (

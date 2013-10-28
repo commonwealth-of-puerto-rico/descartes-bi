@@ -1,0 +1,53 @@
+{% extends 'charts/novus/base.html' %}
+
+{% block content %}
+    <svg id="chart{{ report.id }}" style="min-height: 100%;"></svg>
+{% endblock content %}
+
+{% block javascript %}
+    <script>
+        // Get data
+        (function() {
+            var data = {{ series_results|safe }};
+
+        // Insert chart legends and set graph type into each series
+        {% for report_series in report.report_series.all %}
+            data[{{ forloop.counter0 }}]["key"] = "{{ report_series.series.label }}"
+
+            {% if report_series.type == 'BA' %}
+                // Is a bar type series
+                data[{{ forloop.counter0 }}]["bar"] = true
+            {% endif %}
+
+        {% endfor %}
+
+            var chart;
+            nv.addGraph(function() {
+                chart = nv.models.lineChart();
+                chart.x(function(d,i) { return i });
+                chart.color(d3.scale.category10().range());
+
+                chart.xAxis.tickFormat(function(d) {
+                    // TODO: Don't asume all series have the same x values
+                    return data[0].values[d].x;
+                }).showMaxMin(false);
+
+                chart.xAxis.tickPadding(10);
+
+                chart.showXAxis(true);
+
+                d3.select('#chart{{ report.id }}')
+                    .datum(data)
+                    .transition().duration({{ chart_options.transition|default:500 }})
+                    .call(chart);
+
+                nv.utils.windowResize(chart.update);
+                chart.dispatch.on('stateChange', function(e) {
+                    nv.log('New State:', JSON.stringify(e));
+                });
+                return chart;
+            });
+        })();
+    </script>
+{% endblock javascript %}
+

@@ -9,3 +9,5 @@ settings_local.py
 .DS_Store
 .project
 .py~
+/static/
+/.idea/

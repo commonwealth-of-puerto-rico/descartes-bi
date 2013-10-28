@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block base_content %}
+    <div class="row">
+        <div class="span12">
+            {% if node %}
+                <div class="widget">
+                    <div class="widget-header"> <i class="{{ node.icon }}"></i>
+                        <h3>{{ node.label|default:"No title" }}</h3>
+                    </div>
+                    <!-- /widget-header -->
+                    <div class="widget-content">
+                        <div class="shortcuts">
+                            {% for child_node in node.get_children %}
+                                <a href="{{ child_node.get_absolute_url }}" class="shortcut">
+                                    <i class="shortcut-icon {{ child_node.icon }}"></i>
+                                    <span class="shortcut-label">{{ child_node.label }}</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                      <!-- /widget-content -->
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock base_content %}
+
+{% block base_menu %}
+    {% for menu in menus %}
+        <li>
+            <a href="#">{{ menu }}</a>
+            <ul>
+                {% for report in menu.reports.all %}
+                    <li><a class="report-button" href="{{ report.id }}">{{ report }}</a></li>
+                {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+{% endblock base_menu %}

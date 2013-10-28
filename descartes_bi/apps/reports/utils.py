@@ -17,17 +17,16 @@ from __future__ import absolute_import
 #    You should have received a copy of the GNU General Public License
 #    along with descartes-bi.  If not, see <http://www.gnu.org/licenses/>.
 #
+from django.contrib.auth.models import User
 
-from .models import Report, Menuitem, GroupPermission, UserPermission, User, SeriesStatistic, ReportStatistic
+from .models import Report, Menuitem, GroupPermission, UserPermission
 
 
 def get_allowed_object_for_user(user):
     reports_allowed = []
     menuitems_allowed = []
     try:
-        # TODO: change this comparison, to isinstance
-        if type(user) == type(''):
-            user = User.objects.get(username=user)
+        user = User.objects.get(username=user)
 
         #staff gets all reports & menuitems
         if user.is_staff:
@@ -77,77 +76,3 @@ def get_allowed_object_for_user(user):
         'reports': reports_allowed,
         'menuitems': menuitems_allowed
     }
-
-
-#TODO: Define filter default value when user is doing an exclusive union
-def get_user_filters_limits(user):
-    filter_limits = {}
-    try:
-        # TODO: Fix this comparison too
-        if type(user) == type(''):
-            user = User.objects.get(username=user)
-
-        #staff gets no limits
-        if user.is_staff:
-            return filter_limits
-
-        for group in user.groups.all():
-            try:
-                gp = GroupPermission.objects.get(group=group)
-                for filter in gp.filters.all():
-                    if filter not in filter_limits:  # .keys():
-                        filter_limits[filter] = {}
-
-                    if gp.grouppermissionfiltervalues_set.get(filter=filter).default:
-                        filter_limits[filter]['default'] = gp.grouppermissionfiltervalues_set.get(filter=filter).default
-
-                    if filter.type == FILTER_TYPE_COMBO:
-                        if 'mask' not in filter_limits[filter]:
-                            filter_limits[filter]['mask'] = list(eval(gp.grouppermissionfiltervalues_set.get(filter=filter).options, {}))
-                        else:
-                            for n in eval(gp.grouppermissionfiltervalues_set.get(filter=filter).options, {}):
-                                if n not in filter_limits[filter]['mask']:
-                                    filter_limits[filter]['mask'].append(n)
-            except:
-                #Group does have permissions
-                pass
-        try:
-            up = UserPermission.objects.get(user=user)
-
-            if up.union == 'O':  # Overwrite
-                filter_limits = {}
-
-            if up.union == 'I' or up.union == 'O':  # Inclusive
-                for filter in up.filters.all():
-                    if filter not in filter_limits:  # .keys():
-                        filter_limits[filter] = {}
-
-                    if up.userpermissionfiltervalues_set.get(filter=filter).default:
-                        filter_limits[filter]['default'] = up.userpermissionfiltervalues_set.get(filter=filter).default
-
-                    if filter.type == FILTER_TYPE_COMBO:
-                        if 'mask' not in filter_limits[filter]:
-                            filter_limits[filter]['mask'] = list(eval(up.userpermissionfiltervalues_set.get(filter=filter).options, {}))
-                        else:
-                        #if filter.type == 'DR':
-                            for n in eval(up.userpermissionfiltervalues_set.get(filter=filter).options, {}):
-                                if n not in filter_limits[filter]['mask']:
-                                    filter_limits[filter]['mask'].append(n)
-
-            elif up.union == 'E':  # Exclusive
-                for filter in up.filters.all():
-                    if filter in filter_limits.keys():
-                        if filter.type == FILTER_TYPE_COMBO:
-                            for n in eval(up.userpermissionfiltervalues_set.get(filter=filter).options, {}):
-                                if n in filter_limits[filter]['mask']:
-                                    filter_limits[filter]['mask'].remove(n)
-
-        except:
-            #Not User permission for this user
-            pass
-    except:
-        #unkown user or anonymous
-        pass
-
-    #print "FILTER LIMITS: %s" % filter_limits
-    return filter_limits

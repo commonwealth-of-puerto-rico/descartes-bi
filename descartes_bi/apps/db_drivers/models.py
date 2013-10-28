@@ -78,5 +78,3 @@ class DataSource(models.Model):
         ordering = ['label']
         verbose_name = _('data source')
         verbose_name_plural = _('data sources')
-
-

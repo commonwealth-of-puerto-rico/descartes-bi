@@ -1,0 +1,34 @@
+{% extends 'charts/novus/base.html' %}
+
+{% block content %}
+    <svg id="chart{{ report.id }}" style="min-height: 100%;"></svg>
+{% endblock content %}
+
+{% block javascript %}
+    <script>
+        // Get data
+        (function() {
+            var data = {{ series_results|safe }};
+
+            var chart;
+            nv.addGraph(function() {
+
+                var chart = nv.models.pieChart()
+                    .x(function(d) { return d.x })
+                    .y(function(d) { return d.y })
+                    //.showLabels(false)
+                    .values(function(d) { return d })
+                    .color(d3.scale.category10().range());
+
+                  d3.select('#chart{{ report.id }}')
+                      .datum([data])
+                      .transition().duration({{ chart_options.transition|default:500 }})
+                      .call(chart);
+
+                chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+                return chart;
+            });
+        })();
+    </script>
+{% endblock javascript %}

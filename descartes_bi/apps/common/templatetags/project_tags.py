@@ -16,10 +16,8 @@
 #    along with descartes-bi.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from django import template
+from django.conf import settings
 from django.template import Library
-
-from common.models import Namespace
 
 register = Library()
 
@@ -27,18 +25,4 @@ register = Library()
 @register.simple_tag
 def project_name():
     """Tag to return the current project's title"""
-    from django.conf import settings
     return settings.PROJECT_TITLE
-
-
-class get_root_menu_node(template.Node):
-    def render(self, context):
-
-        context['root_menu'] = [i for i in Namespace.objects.all()
-                                        if i.is_root_node()]
-        return ''
-
-
-@register.tag(name='get_root_menu')
-def get_root_menu(parser, token):
-    return get_root_menu_node()

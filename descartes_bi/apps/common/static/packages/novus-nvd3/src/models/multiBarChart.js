@@ -7,8 +7,7 @@ nv.models.multiBarChart = function() {
 
   var multibar = nv.models.multiBar()
     , xAxis = nv.models.axis()
-    , y1Axis = nv.models.axis()
-    , y2Axis = nv.models.axis()
+    , yAxis = nv.models.axis()
     , legend = nv.models.legend()
     , controls = nv.models.legend()
     ;
@@ -21,16 +20,15 @@ nv.models.multiBarChart = function() {
     , showLegend = true
     , reduceXTicks = true // if false a tick will show for every data point
     , staggerLabels = false
-    , rotateLabels = 1
+    , rotateLabels = 0
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' on ' + x + '</p>'
       }
     , x //can be accessed via chart.xScale()
-    , y1
-    , y2
-    , state = { stacked: true }
+    , y //can be accessed via chart.yScale()
+    , state = { stacked: false }
     , defaultState = null
     , noData = "No Data Available."
     , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
@@ -50,9 +48,6 @@ nv.models.multiBarChart = function() {
   yAxis
     .orient('left')
     .tickFormat(d3.format(',.1f'))
-    ;
-  y2Axis
-    .orient('right')
     ;
 
   //============================================================

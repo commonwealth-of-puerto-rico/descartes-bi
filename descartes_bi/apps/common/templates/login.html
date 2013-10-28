@@ -1,28 +1,15 @@
+{% extends "web_theme_login.html" %}
+
 {% load i18n %}
+{% load project_tags %}
+{% load static %}
 
-{% if form.errors %}
-	<div><div class="errorlist"></div></div>
-	{% with "Error" as title %}
-	{% with "The user or password are incorrect." as message %}
-	{% include "messagebox-error.html" %}
-	{% endwith %}
-	{% endwith %}
-{% endif %}
+{% block web_theme_head %}
+    {% block base_keywords %}{% endblock base_keywords %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}" />
+    <title>{% project_name %}{% block title %}{% endblock %}</title>
+{% endblock web_theme_head %}
 
-<form class="login_panel_form" class="clearfix" action="{% url 'my_login' %}?next={% url 'my_login' %}" method="post">
-	{% csrf_token %}
-	<input type="hidden" id="_wrapper" value="#login_form_wrapper" />
-	<input type="hidden" id="_next_url" value="{% url 'my_password_change' %}" />
-	<input type="hidden" id="_reload_window" value="1" />
-
-	<h1 class="padlock">{% trans "Login information" %}</h1>
-	<label class="grey" for="log">{% trans "User" %}:</label>
-
-	<input class="field" type="text" name="username" id="id_username" value="" size="23" />
-	<label class="grey" for="pwd">{% trans "Password" %}:</label>
-	<input class="field" type="password" name="password" id="id_password" size="23" />
-	{% comment %}<label><input name="rememberme" id="rememberme" type="checkbox" checked="checked" value="forever" /> &nbsp;Remember me</label>{% endcomment %}
-	<div class="clear"></div>
-	<input type="submit" name="submit" value="{% trans "Login" %}" class="bt_register" />
-	{% comment %}<a class="lost-pwd" href="#">{% trans "Forgot your password?" %}</a>{% endcomment %}
-</form>
+{% block web_theme_content %}
+    {{ form }}
+{% endblock web_theme_content %}

@@ -1,0 +1,66 @@
+{% extends 'charts/novus/base.html' %}
+
+{% block content %}
+    <svg id="chart{{ report.id }}" style="min-height: 100%;"></svg>
+{% endblock content %}
+
+{% block javascript %}
+    <script>
+        // Get data
+        (function() {
+            var data = {{ series_results|safe }};
+
+        // Insert chart legends and set graph type into each series
+        {% for report_series in report.report_series.all %}
+            data[{{ forloop.counter0 }}]["key"] = "{{ report_series.series.label }}"
+
+            {% if report_series.type == 'BA' %}
+                // Is a bar type series
+                data[{{ forloop.counter0 }}]["bar"] = true
+            {% endif %}
+
+        {% endfor %}
+
+            var chart;
+            nv.addGraph(function() {
+                 //TODO self calling function returning new chart
+                chart = nv.models.multiBarChart()
+                    .x(function(d) { return d.x })
+                    .y(function(d) { return d.y })
+                    .margin({top: {{ chart_options.margin_top|default:30 }}, right: {{ chart_options.margin_right|default:20 }}, bottom: {{ chart_options.margin_bottom|default:115 }}, left: {{ chart_options.margin_left|default:75 }} })
+                    .barColor(d3.scale.category10().range())
+                    .showLegend({{ chart_options.legend|default:'false' }})
+                    .showControls({{ chart_options.controls|default:'false' }});
+
+                chart.multibar
+                    .hideable(true);
+
+                chart.reduceXTicks({{ chart_options.reduceXTicks|default:'false' }}).staggerLabels({{ chart_options.staggerLabels|default:'false' }});
+
+                chart.yAxis.showMaxMin({{ chart_options.showMaxMin|default:'false' }});
+
+                d3.select('#chart{{ report.id }}')
+                    .datum(data)
+                    .transition().duration({{ chart_options.transition|default:500 }})
+                    .call(chart);
+
+                {% if chart_options.rotate == 'true' %}
+
+                    d3.select('#chart{{ report.id }}')
+                        .selectAll('.nv-x.nv-axis > g')
+                        .selectAll('g')
+                        .selectAll('text')
+                        .style("text-anchor", "end")
+                        .attr('transform', function(d) { return 'translate (0, 0) rotate(-65 -5,10)' });
+
+                {% endif %}
+
+                nv.utils.windowResize(chart.update);
+
+                chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+                return chart;
+            });
+        })();
+    </script>
+{% endblock javascript %}

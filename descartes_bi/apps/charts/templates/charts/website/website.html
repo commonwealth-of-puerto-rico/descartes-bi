@@ -1,0 +1,40 @@
+{% load i18n %}
+
+{% if form %}
+    <div class="row-fluid">
+        <form method="get" action="" style="padding: 0px; margin: 0px;">
+            {% for field in form %}
+            <div class="span3">
+                {{ field }}
+            </div>
+            {% endfor %}
+                <button type="submit" class="btn btn-primary">{% trans 'Submit' %}</button>
+        </form>
+    </div>
+
+    {% endif %}
+
+{% comment %}
+        <div class="span4">
+            <form method="get" action="" class="well">
+                <fieldset>
+                    {{ form }}
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">{% trans 'Submit' %}</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div class="span8">
+    {% else %}
+        <div class="span12">
+    {% endif %}
+{% endcomment %}
+
+    <div class="row-fluid">
+        <div class="span12">
+            <div id='widget-element'>
+                <iframe src="data:text/html;base64,{{ content|safe }}" style="width: 100%; min-height: 90%"></iframe>
+            </div>
+        </div>
+    </div>

@@ -17,15 +17,15 @@ from __future__ import absolute_import
 #    You should have received a copy of the GNU General Public License
 #    along with descartes-bi.  If not, see <http://www.gnu.org/licenses/>.
 #
+import re
 
 from django import forms
 from django.contrib import admin
 from django.db.models.fields import CharField
 from django.utils.translation import ugettext_lazy as _
 
-from .models import (FilterExtra, SerieType, GroupPermissionFilterValues,
-    UserPermissionFilterValues, UserPermission, GroupPermission, Report, Serie,
-    Filterset, Filter, Menuitem, SeriesStatistic, ReportStatistic)
+from .models import (Filter, Filterset, FiltersetFilters,
+    GroupPermission, Menuitem, Report, ReportSeries, Serie, UserPermission)
 
 
 #clone_objects Copyright (C) 2009  Rune Bromer
@@ -92,50 +92,32 @@ class ReadOnlyAdminFields(object):
         return form
 
 
-class UserPermissionFilterValuesInline(admin.StackedInline):
-    model = UserPermissionFilterValues
-    extra = 1
-    classes = ('collapse-open',)
-    allow_add = True
-
-
 class UserPermissionAdmin(admin.ModelAdmin):
     radio_fields = {'union': admin.HORIZONTAL}
     list_display = ('user', 'get_reports')
     filter_horizontal = ('reports',)
-    inlines = [
-        UserPermissionFilterValuesInline,
-    ]
     order = 8
-
-
-class GroupPermissionFilterValuesInline(admin.StackedInline):
-    model = GroupPermissionFilterValues
-    extra = 1
-    classes = ('collapse-open',)
-    allow_add = True
 
 
 class GroupPermissionAdmin(admin.ModelAdmin):
     list_display = ('group', 'get_reports')
     filter_horizontal = ('reports',)
-    inlines = [
-        GroupPermissionFilterValuesInline,
-    ]
     order = 9
 
 
 class FilterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'type', 'label', 'default',
-                    'get_parents')
-    inlines = [
-        GroupPermissionFilterValuesInline, UserPermissionFilterValuesInline,
-    ]
+    list_display = ('name', 'label', 'description', 'filter_type', 'default',
+        'get_parents')
     order = 0
+    list_editable = ('description', 'filter_type', 'label', 'default')
+
+    def get_parents(self, instance):
+        return ', '.join(['"%s"' % p.filterset for p in FiltersetFilters.objects.filter(filter=instance)])
+    get_parents.short_description = _('used by filter sets')
 
 
 class FilterInline(admin.StackedInline):
-    model = FilterExtra
+    model = FiltersetFilters
     extra = 1
     classes = ('collapse-open',)
     allow_add = True
@@ -149,11 +131,15 @@ class FiltersetAdmin(admin.ModelAdmin):
     ]
     order = 1
 
+    def get_parents(self, instance):
+        return ', '.join(['"%s"' % r.title for r in instance.report_set.all()])
+    get_parents.short_description = _('used by reports')
+
 
 class SerieAdmin(admin.ModelAdmin):
     search_fields = ['name', 'label']
     search_fields_verbose = ['Name', 'Label']
-    list_display = ('name', 'label', 'get_params', 'get_parents', 'data_source', 'validated')
+    list_display = ('name', 'label', 'get_params', 'get_reports', 'data_source', 'validated')
     list_editable = ('data_source', 'label')
     order = 2
     fieldsets = (
@@ -161,7 +147,7 @@ class SerieAdmin(admin.ModelAdmin):
             'fields': ('name', 'label')
         }),
         (_('Data'), {
-            'fields': ('data_source', 'tick_format1', 'tick_format2','query', 'description')
+            'fields': ('data_source', 'tick_format1', 'tick_format2', 'query', 'description')
         }),
         (_(u'Validation'), {
             'classes': ('collapse-open',),
@@ -183,25 +169,28 @@ class SerieAdmin(admin.ModelAdmin):
 
     clone.short_description = _(u"Copy the selected object")
 
+    def get_reports(self, instance):
+        return ', '.join(['"%s"' % report_series.report for report_series in ReportSeries.objects.filter(series=instance)])
+    get_reports.short_description = _('used by reports')
 
-class SerieInline(admin.StackedInline):
-    model = SerieType
+    def get_params(self, instance):
+        return '(%s)' % ', '.join([p for p in re.compile(r'%\((.*?)\)').findall(instance.query)])
+    get_params.short_description = _('parameters')
+
+
+class ReportSeriesInline(admin.StackedInline):
+    model = ReportSeries
     extra = 1
     classes = ('collapse-open',)
     allow_add = True
 
 
 class ReportAdmin(admin.ModelAdmin):
-    radio_fields = {'type': admin.VERTICAL, 'orientation': admin.HORIZONTAL}
-    list_display = ('title', 'description', 'type', 'get_series',
+    list_display = ('title', 'description', 'get_series', 'filterset',
                     'get_parents')
-    filter_horizontal = ('filtersets',)
     search_fields = ['title', 'description']
     search_fields_verbose = ['Title', 'Description']
-    exclude = ('series',)
-    inlines = [
-        SerieInline,
-    ]
+    inlines = [ReportSeriesInline]
     order = 3
 
     actions = ['clone']
@@ -217,6 +206,14 @@ class ReportAdmin(admin.ModelAdmin):
 
     clone.short_description = _(u"Copy the selected object")
 
+    def get_parents(self, instance):
+        return ', '.join([mi.title for mi in instance.menuitem_set.all()])
+    get_parents.short_description = _('used by menus')
+
+    def get_series(self, instance):
+        return ', '.join(['"%s"' % report_series.series for report_series in instance.report_series.all()])
+    get_series.short_description = _('series')
+
 
 class MenuitemAdmin(admin.ModelAdmin):
     list_display = ('title', 'order', 'get_reports')
@@ -224,25 +221,9 @@ class MenuitemAdmin(admin.ModelAdmin):
     filter_horizontal = ('reports',)
     order = 4
 
-
-class SeriesStatisticAdmin(ReadOnlyAdminFields, admin.ModelAdmin):
-    date_hierarchy = 'timestamp'
-    list_filter = ['serie', 'user']
-    list_display = ['id', 'timestamp', 'serie', 'user', 'execution_time',
-                    'params']
-    readonly = ['serie', 'user', 'execution_time', 'params']
-    order = 10
-    actions = None
-
-
-class ReportStatisticAdmin(ReadOnlyAdminFields, admin.ModelAdmin):
-    date_hierarchy = 'timestamp'
-    list_filter = ['report', 'user']
-    list_display = ['id', 'timestamp', 'report', 'user', 'execution_time',
-                    'params']
-    readonly = ['report', 'user', 'execution_time', 'params']
-    order = 11
-    actions = None
+    def get_reports(self, instance):
+        return ', '.join(['"%s"' % r.title for r in instance.reports.all()])
+    get_reports.short_description = _('charts')
 
 
 admin.site.register(UserPermission, UserPermissionAdmin)
@@ -252,5 +233,3 @@ admin.site.register(Serie, SerieAdmin)
 admin.site.register(Filterset, FiltersetAdmin)
 admin.site.register(Filter, FilterAdmin)
 admin.site.register(Menuitem, MenuitemAdmin)
-admin.site.register(ReportStatistic, ReportStatisticAdmin)
-admin.site.register(SeriesStatistic, SeriesStatisticAdmin)

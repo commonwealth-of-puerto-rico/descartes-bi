@@ -1,0 +1,109 @@
+{% load static %}
+{% load compress %}
+{% load project_tags %}
+
+<!-- Copyright 2013 www.egrappler.com Free Bootstrap Responsive Admin Template -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+        {% compress css %}
+            <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+            <link href="{% static 'css/bootstrap-responsive.min.css' %}" rel="stylesheet">
+            <link href="http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600"
+                    rel="stylesheet">
+            <link href="{% static 'css/font-awesome.css' %}" rel="stylesheet">
+            <link href="{% static 'css/style.css' %}" rel="stylesheet">
+            <link href="{% static 'css/pages/dashboard.css' %}" rel="stylesheet">
+            <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+            <!--[if lt IE 9]>
+              <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+            <![endif]-->
+            <style>
+                .shortcuts .shortcut:hover {
+                    background: #101010;
+                }
+
+                .navbar-inner { background: #101010; !important; moz-border-radius: 0;}
+
+                .subnavbar .container > ul > li.active > a { color: white; border-bottom: 3px solid white; }
+
+                .dropdown-menu > li > a:hover{ background: #491212; border: 1px solid black; }
+
+                .shortcuts > .shortcut { background: #E0E0E0; }
+
+                body { background: #202020;}
+            </style>
+            {% block web_theme_css %}{% endblock web_theme_css %}
+            {# Add CSS Debugging #}
+            {% if 0 %}
+                <style type="text/css">
+                   *:hover { border:2px solid #ffffff }
+                   * *:hover { border:2px solid #89A81E }
+                   * * *:hover { border:2px solid #F34607 }
+                   * * * *:hover { border:2px solid #5984C3 }
+                   * * * * *:hover { border:2px solid #CD1821 }
+                   * * * * * *:hover { border:2px dotted #89A81E }
+                   * * * * * * *:hover { border:2px dotted #F34607 }
+                   * * * * * * * *:hover { border:2px dotted #5984C3 }
+                   * * * * * * * * *:hover { border:2px dotted #CD1821 }
+                </style>
+            {% endif %}
+        {% endcompress %}
+
+        {% block web_theme_head %}{% endblock web_theme_head %}
+    </head>
+    <body>
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                     <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <h1 style="font-size: 35px; margin-top: 0px; margin-bottom: 0px;" >
+                        <a class="brand"  href="{% url 'home_view' %}" style="color: white;">
+                            <img src="{% static 'images/word_logo.png' %}" alt="project logo" />
+                        </a>
+                    </h1>
+
+                    <div class="nav-collapse">
+
+                        {% block web_theme_user_bar %}{% endblock web_theme_user_bar %}
+
+                    </div>
+                    <!--/.nav-collapse -->
+                </div>
+                <!-- /container -->
+            </div>
+            <!-- /navbar-inner -->
+        </div>
+
+        {% block web_theme_menu %}{% endblock web_theme_menu %}
+
+        <div class="main">
+            <div class="main-inner">
+                <div class="container">
+                    {% block web_theme_content %}{% endblock web_theme_content %}
+                <!-- /container -->
+                </div>
+            <!-- /main-inner -->
+            </div>
+        </div>
+
+        <!-- Placed at the end of the document so the pages load faster -->
+        {% compress js %}
+            <script src="{% static 'packages/jquery/jquery-2.0.3.min.js' %}"></script>
+            <script src="{% static 'packages/jquery/jquery-migrate-1.2.1.min.js' %}"></script>
+            <script src="{% static 'js/excanvas.min.js' %}"></script>
+            <script src="{% static 'js/bootstrap.js' %}"></script>
+            <script src="{% static 'js/base.js' %}"></script>
+            {% block web_theme_javascript %}{% endblock web_theme_javascript %}
+        {% endcompress %}
+    </body>
+</html>

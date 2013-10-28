@@ -1,0 +1,282 @@
+{% load i18n %}
+
+{% if 0 %}
+    {% load static %}
+        <link type="text/css" rel="stylesheet" href="{% static 'packages/novus-nvd3/src/nv.d3.css' %}"/>
+
+        <script type="text/javascript" src="{% static 'packages/jquery-1.10.2.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/lib/d3.v3.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/nv.d3.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/tooltip.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/utils.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/legend.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/axis.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/scatter.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/line.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/historicalBar.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/linePlusBarChart.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/lineWithFocusChart.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/multiBar.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/multiBarChart.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/pie.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/pieChart.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/multiBarHorizontal.js' %}"></script>
+        <script type="text/javascript" src="{% static 'packages/novus-nvd3/src/models/multiBarHorizontalChart.js' %}"></script>
+{% endif %}
+
+{% if 1 %}
+    QUERY: {{ query }}<br />
+    PARAMS: {{ params }}<br />
+    series_results: {{ series_results }}<br />
+{% endif %}
+
+{% if not series_results %}
+    {% with 'Attention' as title %}
+    {% with 'There are no results for the selected parameters, choose other values.' as message %}
+    {% include "messagebox-attention.html" %}
+    {% endwith %}
+    {% endwith %}
+{% else %}
+
+    <body>
+        <svg id="chart{{ report.id }}" style="min-height: 100%;"></svg>
+        <script>
+            // Get tick formats for x,y output formats ex: date/$
+            var bool1 = true;
+            var bool2 = true;
+            var tf = '{{ tick_format1.0 }}';
+            var tf2 = '{{ tick_format2.0 }}';
+            {% for tf in tick_format1 %}
+                if (tf != "{{ tf }}") {
+                    bool = false;
+                    var tf_1 = '{{ tf }}';
+                 }
+            {% endfor %}
+            {% for tf in tick_format2 %}
+                if (tf2 != "{{ tf }}") {
+                    bool2 = false;
+                    var tf_2 = '{{ tf }}';
+                }
+            {% endfor %}
+
+            // Get data
+            var data = [
+                {% for series_result in series_results %}
+                    {
+                        "values" : JSON.parse('{{ series_result|safe }}')
+                    },
+                {% endfor %}
+            ].map(function(series) {
+                series.values = series.values.map(function(d) {
+                    if (typeof d[1] === 'string')
+                         return { x: d[1], y: d[0] };
+                    else return { x: d[0], y: d[1] };
+                });
+                return series;
+            });
+
+            var data = {{ series_results|safe }}
+
+            // Insert chart legends and set graph type into each series
+            {% for report_series in report.report_series.all %}
+                data[{{ forloop.counter0 }}]["key"] = "{{ report_series.series.label }}"
+
+                {% if report_series.type == 'BA' %}
+                    // Is a bar type series
+                    data[{{ forloop.counter0 }}]["bar"] = true
+                {% endif %}
+
+            {% endfor %}
+            // If Standart X,Y Horizontal Chart
+            {% if chart_type == 'SH' %}
+            var chart;
+            nv.addGraph(function() {
+              chart = nv.models.multiBarHorizontalChart()
+                  .x(function(d) { return d.x })
+                  .y(function(d) { return d.y })
+                  .margin({top: 0, right: 30, bottom: 50, left: 90})
+                  .barColor(d3.scale.category20().range())
+                  .showLegend(false)
+                  .showControls(false);
+
+              chart.yAxis
+                  .tickFormat(d3.format(',.2f'));
+                console.log(data);
+              d3.select('#chart{{ report.id }}')
+                  .datum(data)
+                  .transition().duration(500)
+                  .call(chart);
+
+              nv.utils.windowResize(chart.update);
+
+              chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+              return chart;
+            });
+            {% elif chart_type == 'SI' %}
+                var chart;
+                nv.addGraph(function() {
+                chart = nv.models.multiBarChart()
+                    .x(function(d) { return d.x })
+                    .y(function(d) { return d.y })
+                    .margin({top: 30, right: 20, bottom: 115, left: 75})
+                    .barColor(d3.scale.category10().range())
+                    .showLegend(false)
+                    .showControls(false);
+                    //.height("300");
+
+                chart.multibar
+                    .hideable(true);
+
+                chart.reduceXTicks(false).staggerLabels(true);
+
+                chart.yAxis.showMaxMin(false);
+
+                d3.select('#chart{{ report.id }}')
+                    .datum(data)
+                    .transition().duration(500)
+                    .call(chart);
+
+                d3.select('#chart{{ report.id }}')
+                    .selectAll('.nv-x.nv-axis > g')
+                    .selectAll('g')
+                    .selectAll('text')
+                    .style("text-anchor", "end")
+                    .attr('transform', function(d) { return 'translate (0, 0) rotate(-65 -5,10)' });
+
+                nv.utils.windowResize(chart.update);
+
+                chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+                return chart;
+            });
+            {% elif chart_type == 'LI' %}
+                var chart;
+                nv.addGraph(function() {
+                    chart = nv.models.lineChart();
+                    chart.x(function(d,i) { return i });
+                    chart.color(d3.scale.category10().range());
+
+                    chart.xAxis.tickFormat(function(d) {
+                        if (bool1 == true && tf == 'My'){
+                            var date = (data[0].values[d].x);
+                            date = date.split("_");
+                            if (date.length == 1)
+                                date = date[0].split("-");
+                            return d3.time.format('%B %Y')(new Date(date[0], date[1], 0, 0, 0, 0, 0));
+                        }
+                        else return data[0].values[d].x;
+
+                    }).showMaxMin(false);
+                    chart.xAxis.tickPadding(10);
+
+
+                chart.yAxis.tickFormat(function(d) {
+                    // TO DO: Include other tick formats
+                    return d;
+                });
+                    chart.showXAxis(true);
+
+                    d3.select('#chart{{ report.id }}')
+                        .datum(data)
+                        .transition().duration(500)
+                        .call(chart);
+
+                    nv.utils.windowResize(chart.update);
+                    chart.dispatch.on('stateChange', function(e) {
+                        nv.log('New State:', JSON.stringify(e));
+                    });
+                    return chart;
+                });
+            {% elif chart_type == 'PI' %}
+                nv.addGraph(function() {
+                    var data = getData();
+                    var chart = nv.models.pieChart()
+                        .x(function(d) { return d.key })
+                        .y(function(d) { return d.y })
+                        .showLabels(false)
+                        .values(function(d) { return d })
+                        .color(d3.scale.category10().range())
+                    chart.showLegend(true);
+                    d3.select('#chart{{ report.id }}')
+                        .datum([data])
+                        .transition()
+                        //.duration(1200)
+                        .call(chart);
+                    chart.dispatch.on('stateChange', function(e) {
+                        nv.log('New State:', JSON.stringify(e));
+                    });
+                    return chart;
+                });
+                function getData() {
+                // PIE CHART SHOULD HAVE ONLY ONE DATA SOURCE
+                    var data = '{{ series_results.0 }}';
+                    data = JSON.parse(data.replace(/&quot;/g,'"'));
+                    var x=[];
+
+                    data.forEach(function(entry) {
+                        x.push({key: entry[0], y: entry[1]});
+                    });
+                    return x;
+                }
+            {% elif chart.type == 'LF' %}
+                nv.addGraph(function() {
+                    var chart = nv.models.lineWithFocusChart();
+                    chart.x(function(d, i) {
+                        return i;
+                    })
+                    .color(d3.scale.category10().range());
+
+                    chart.xAxis.tickFormat (function(d){  return data[0].values[d].x; });
+                    chart.x2Axis.tickFormat(function(d){  return data[0].values[d].x; });
+                    chart.yAxis
+                        .tickFormat(d3.format(',f'));
+                    chart.y2Axis.tickFormat(function(d) {
+                        return d;
+                    });
+
+                    d3.select('#chart{{ report.id }}')
+                        .datum(data)
+                        .transition().duration(500)
+                        .call(chart);
+                    nv.utils.windowResize(chart.update);
+
+                    return chart;
+                });
+            {% elif chart.type == 'LB' %}
+                var chart;
+                nv.addGraph(function() {
+                    chart = nv.models.linePlusBarChart()
+                        .margin({top: 30, right: 60, bottom: 50, left: 70})
+                        .x(function(d,i) { return i })
+                        .color(d3.scale.category10().range());
+
+                    chart.xAxis.tickFormat(function(d) {
+                        var dx = data[0].values[d] && data[0].values[d].x || 0;
+                        if (dx) {
+                            return dx;
+                        }
+                        else return '';
+                    }).showMaxMin(false);
+
+                    chart.y1Axis
+                        .tickFormat(d3.format(',f'));
+
+                    chart.y2Axis
+                        .tickFormat(function(d) { return d; });
+                    chart.bars.forceY([0]).padData(false);
+
+                    d3.select('#chart{{ report.id }}')
+                        .datum(data)
+                        .transition().duration(500).call(chart);
+
+                    nv.utils.windowResize(chart.update);
+                    chart.dispatch.on('stateChange', function(e) {
+                        nv.log('New State:', JSON.stringify(e));
+                    });
+                    return chart;
+                });
+            {% endif %}
+        </script>
+    </body>
+{% endif %}
